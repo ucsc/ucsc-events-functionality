@@ -91,3 +91,38 @@ add_filter('body_class', 'ecf_add_body_class');
 
 // Initialize the plugin
 new EventsCalendarFunctionality();
+
+
+// Include custom templates
+add_filter('theme_page_templates', 'ecf_register_plugin_templates');
+add_filter('template_include', 'ecf_load_plugin_template');
+
+/**
+ * Register plugin templates so they appear in the admin "Template" dropdown.
+ */
+function ecf_register_plugin_templates($templates) {
+    $new_templates = array(
+        'template-venues.php' => __('Venues Template', 'ucsc-events-functionality'),
+        'template-organizer.php' => __('Organizers Template', 'ucsc-events-functionality'),
+    );
+
+    return array_merge($templates, $new_templates);
+}
+
+/**
+ * Load selected plugin template when assigned to a page.
+ */
+function ecf_load_plugin_templates($template) {
+    if (is_singular('page')) {
+        $selected_template = get_post_meta(get_the_ID(), '_wp_page_template', true);
+
+        // Path to the template inside the plugin
+        $plugin_template = $plugin_path . 'templates/' . $selected_template;
+
+        if (file_exists($plugin_template)) {
+            return $plugin_template;
+        }
+    }
+
+    return $template;
+}
