@@ -1,4 +1,8 @@
-<?php /* Template Name: Venues Template */ 
+<?php 
+/**
+ * Template Name: Venues Template
+ * Description: A custom page template for displaying event venues.
+ */
 get_header(); ?>
 
 <main class="site-main template-venues">

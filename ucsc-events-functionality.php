@@ -95,18 +95,23 @@ new EventsCalendarFunctionality();
 
 // Include custom templates
 add_filter('theme_page_templates', 'ecf_register_plugin_templates');
-add_filter('template_include', 'ecf_load_plugin_template');
+add_filter('template_include', 'ecf_load_plugin_templates', 99);
 
 /**
  * Register plugin templates so they appear in the admin "Template" dropdown.
  */
 function ecf_register_plugin_templates($templates) {
-    $new_templates = array(
-        'template-venues.php' => __('Venues Template', 'ucsc-events-functionality'),
-        'template-organizer.php' => __('Organizers Template', 'ucsc-events-functionality'),
-    );
+    // Only add templates if we're in the admin area
+    if (is_admin()) {
+        $new_templates = array(
+            'template-venues.php' => __('Venues Template', 'ucsc-events-functionality'),
+            'template-organizer.php' => __('Organizers Template', 'ucsc-events-functionality'),
+        );
 
-    return array_merge($templates, $new_templates);
+        $templates = array_merge($templates, $new_templates);
+    }
+
+    return $templates;
 }
 
 /**
@@ -116,11 +121,31 @@ function ecf_load_plugin_templates($template) {
     if (is_singular('page')) {
         $selected_template = get_post_meta(get_the_ID(), '_wp_page_template', true);
 
-        // Path to the template inside the plugin
-        $plugin_template = $plugin_path . 'templates/' . $selected_template;
+        // Only process if a custom template is selected and it's one of our plugin templates
+        if (!empty($selected_template) && $selected_template !== 'default') {
+            // Define our plugin templates
+            $plugin_templates = array(
+                'template-venues.php',
+                'template-organizer.php'
+            );
 
-        if (file_exists($plugin_template)) {
-            return $plugin_template;
+            // Check if the selected template is one of our plugin templates
+            if (in_array($selected_template, $plugin_templates)) {
+                // Path to the template inside the plugin
+                $plugin_template = plugin_dir_path(__FILE__) . 'templates/' . $selected_template;
+
+                // Verify the file exists before returning it
+                if (file_exists($plugin_template) && is_readable($plugin_template)) {
+                    return $plugin_template;
+                } else {
+                    // Log error for debugging (only if WP_DEBUG is enabled)
+                    if (defined('WP_DEBUG') && WP_DEBUG) {
+                        error_log('UCSC Events Functionality: Template file not found or not readable: ' . $plugin_template);
+                        error_log('UCSC Events Functionality: File exists check: ' . (file_exists($plugin_template) ? 'true' : 'false'));
+                        error_log('UCSC Events Functionality: File readable check: ' . (is_readable($plugin_template) ? 'true' : 'false'));
+                    }
+                }
+            }
         }
     }
 
