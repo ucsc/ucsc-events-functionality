@@ -41,6 +41,17 @@ class EventsCalendarFunctionality
 
     // Load plugin text domain for translations
     add_action('plugins_loaded', array($this, 'load_textdomain'));
+
+    add_action('init', function () {
+      register_block_bindings_source('ucsc-events-functionality/post-id', [
+        'label' => __('Post ID', 'ucsc-events-functionality'),
+        'get_value_callback' => function ($source_args, $block_instance) {
+          return get_the_ID();
+        },
+        'uses_context' => ['postId'], // Important for query loops
+      ]);
+    });
+
   }
 
   /**
@@ -89,5 +100,8 @@ function ecf_add_body_class($classes)
 }
 add_filter('body_class', 'ecf_add_body_class');
 
+
 // Initialize the plugin
 new EventsCalendarFunctionality();
+
+
