@@ -4,7 +4,7 @@
  * Plugin Name: UCSC Events Functionality
  * Plugin URI: https://github.com/ucsc/ucsc-events-functionality
  * Description: Additional functionality for the events calendar.
- * Version: 1.2.0
+ * Version: 1.2.2
  * Author: Rob Knight
  * Author URI: https://www.ucsc.edu
  * License: GPL v2 or later
