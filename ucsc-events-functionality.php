@@ -36,9 +36,6 @@ class EventsCalendarFunctionality
    */
   private function init()
   {
-    // Hook into WordPress
-    add_action('wp_enqueue_scripts', array($this, 'enqueue_styles'), 100);
-
     // Load plugin text domain for translations
     add_action('plugins_loaded', array($this, 'load_textdomain'));
 
@@ -52,28 +49,12 @@ class EventsCalendarFunctionality
       ]);
     });
 
+    // Add custom column to users list for events count
+    add_filter('manage_users_columns', array($this, 'add_events_column'));
+    add_action('manage_users_custom_column', array($this, 'populate_events_column'), 10, 3);
+
   }
 
-  /**
-   * Enqueue frontend stylesheet with high priority
-   */
-  public function enqueue_styles()
-  {
-    $plugin_url = plugin_dir_url(__FILE__);
-    $plugin_path = plugin_dir_path(__FILE__);
-    $plugin_data = get_plugin_data(__FILE__);
-
-    // Enqueue the main stylesheet if it exists
-    if (file_exists($plugin_path . 'assets/css/ucsc-events-variables.css')) {
-      wp_enqueue_style(
-        'ucsc-events-functionality',
-        $plugin_url . 'assets/css/ucsc-events-variables.css',
-        array(), // No dependencies to ensure it loads independently
-        $plugin_data['Version'],
-        true
-      );
-    }
-  }
 
   /**
    * Load plugin text domain for translations
@@ -86,22 +67,54 @@ class EventsCalendarFunctionality
       dirname(plugin_basename(__FILE__)) . '/languages/'
     );
   }
+
+  /**
+   * Add Events column to users list
+   *
+   * @param array $columns Existing columns
+   * @return array Modified columns
+   */
+  public function add_events_column($columns)
+  {
+    // Insert the Events column before the Posts column
+    $new_columns = array();
+    foreach ($columns as $key => $value) {
+      if ($key === 'posts') {
+        $new_columns['tribe_events'] = __('Events', 'ucsc-events-functionality');
+      }
+      $new_columns[$key] = $value;
+    }
+    return $new_columns;
+  }
+
+  /**
+   * Populate Events column with user's event count
+   *
+   * @param string $output      Custom column output
+   * @param string $column_name Name of the column
+   * @param int    $user_id     ID of the user
+   * @return string Column content
+   */
+  public function populate_events_column($output, $column_name, $user_id)
+  {
+    if ($column_name === 'tribe_events') {
+      $count = count_user_posts($user_id, 'tribe_events', true);
+
+      if ($count > 0) {
+        // Create a link to filter events by this user
+        $output = sprintf(
+          '<a href="%s">%d</a>',
+          admin_url('edit.php?post_type=tribe_events&author=' . $user_id),
+          $count
+        );
+      } else {
+        $output = '0';
+      }
+    }
+    return $output;
+  }
 }
-
-
-
-/**
- * Add custom CSS class to body for easier targeting
- */
-function ecf_add_body_class($classes)
-{
-  $classes[] = 'ucsc-events-functionality-active';
-  return $classes;
-}
-add_filter('body_class', 'ecf_add_body_class');
 
 
 // Initialize the plugin
 new EventsCalendarFunctionality();
-
-
