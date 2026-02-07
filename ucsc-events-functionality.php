@@ -115,6 +115,5 @@ class EventsCalendarFunctionality
   }
 }
 
-
 // Initialize the plugin
 new EventsCalendarFunctionality();
